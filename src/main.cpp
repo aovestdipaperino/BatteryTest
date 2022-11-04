@@ -1,32 +1,34 @@
-#include <Arduino.h>
-#include "MAX17048.h"
-#include "WiFi.h"
-#include "esp32-hal-bt.h"
 
-MAX17048 pwr_mgmt;
+#include <Adafruit_BusIO_Register.h>
+#include <Adafruit_MAX1704x.h>
+
+#include "BluetoothSerial.h"
+
+
+Adafruit_MAX17048 pwr_mgmt;
+
+BluetoothSerial SerialBT;
+
 
 void setup()
 {
-  Serial.begin(115200);
-  Wire.begin(17, 19);
-  pwr_mgmt.attatch(Wire);
-  WiFi.mode(WIFI_OFF); // just to be sure
-  btStop();
+    //WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);
+    Serial.begin(115200);
+    Wire.begin(17, 19);
+    pwr_mgmt.begin();
+    SerialBT.begin("RemoteTest"); //Bluetooth device name
+    pwr_mgmt.quickStart();
+    delay(500);
 }
 
 void loop()
 {
-  static float prevPerc = 0;
+
+    SerialBT.print("VCELL V   : ");
+    SerialBT.println(pwr_mgmt.cellVoltage());
+    SerialBT.print("VCELL SOC : ");
+    SerialBT.print(pwr_mgmt.cellPercent());
+    SerialBT.println(" \%");
+    SerialBT.println();
     delay(1000);
-
-  if (pwr_mgmt.accuratePercent() == prevPerc) return;
-
-  prevPerc = pwr_mgmt.accuratePercent();
-  Serial.print("VCELL V   : ");
-  Serial.println(pwr_mgmt.voltage());
-  Serial.print("VCELL SOC : ");
-  Serial.print(pwr_mgmt.accuratePercent());
-  Serial.println(" \%");
-  Serial.println();
-
 }
